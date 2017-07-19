@@ -22,21 +22,32 @@ class RedisController
     }
 
 
-    public function save($imageBase64,$picName,$dirName)
+    public function save($key,$value)
     {
         $redis = $this->connect();
-        $redis->hSet($dirName,$picName,$imageBase64);
+
+        return $redis->SADD($key,$value);
     }
 
-    public function isExist($picName,$dirName){
+    public function isExist($key){
         $redis = $this->connect();
-        return $redis->hExists($dirName,$picName);
+        return $redis->exists($key);
     }
 
-    public function get($picName,$dirName){
+    public function get($key){
         $redis = $this->connect();
-        return $redis->hGet($dirName,$picName);
+        return $redis->sMembers($key);
+    }
+    public function remove($key,$value){
+        $redis = $this->connect();
+        return $redis->sRem($key,$value);
     }
 
+    public function del($key){
+        $redis = $this->connect();
+        return $redis->del($key);
+    }
 }
+
+
 
