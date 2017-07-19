@@ -22,11 +22,11 @@ class ChatBot
             $action = explode("：", $info);
 
             if (count($action) > 1) {
-                if ($action[1] == '天气') {
-                    $this->config['info'] = $action[1];
-                    $this->config['loc'] = $action[2];
+                if ($action[0] == '天气') {
+                    $this->config['info'] = $action[0];
+                    $this->config['loc'] = $action[1];
                 }
-            } else {
+            }else {
                 $this->config['info'] = $info;
             }
         }
@@ -70,4 +70,5 @@ class ChatBot
 
 
 }
+
 

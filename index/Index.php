@@ -38,6 +38,7 @@ class Index
     //正常处理消息
     public function handleMsg($msg)
     {
+        var_dump($msg['fromType']);
         $action = explode("：", $msg['content']);
         if (count($action) > 1) {
             //有命令
@@ -46,16 +47,17 @@ class Index
                 $path = $this->fightPic($action[1]);
                 Image::send($msg['from']['UserName'], $path);
             }elseif ($action[0]=='天气'){
-                $response = $this->smartChat($msg['content'], $msg['from']['UserName']);
+                $response = $this->smartChat($msg['from']['UserName'],$msg['content']);
                 foreach ($response as $ans) {
                     if (isset($ans)) {
                     Text::send($msg['from']['UserName'], $ans);
                     }
                 }
             }
-        } elseif ($msg['fromType'] == 'Friend') {
+        } elseif ($msg['fromType'] == 'Friend' || $msg['fromType'] == 'Group') {
+            var_dump($msg['content']);
             //排除群聊
-            $response = $this->smartChat($msg['content'], $msg['from']['UserName']);
+            $response = $this->smartChat($msg['from']['UserName'],$msg['content']);
             foreach ($response as $ans) {
                 if (isset($ans)) {
                     Text::send($msg['from']['UserName'], $ans);
@@ -69,8 +71,8 @@ class Index
     {
 //        $message=[
 //            'fromType'=>'Friend',
-//            'content'=>'天气',
-//            'from'=>['UserName'>'@a2ab1a0a35f2f528ba4c941f584a04addf6711e068a1df993acdc8f5a45e7975'],
+//            'content'=>'天气：浙江省兰溪市',
+//            'from'=>['UserName'=>'@a2ab1a0a35f2f528ba4c941f584a04addf6711e068a1df993acdc8f5a45e7975'],
 //        ];
 
         // init vbot
