@@ -3,9 +3,13 @@
 use Hanson\Vbot\Foundation\Vbot;
 use Hanson\Vbot\Message\Text;
 use Hanson\Vbot\Message\Image;
+use Hanson\Vbot\Message\Emoticon;
+use Hanson\Vbot\Message\Video;
+use Hanson\Vbot\Message\Voice;
 use Illuminate\Support\Collection;
 
 require_once __DIR__ . '/FightPic.php';
+require_once __DIR__ . '/ChatBot.php';
 
 /**
  *入口
@@ -13,12 +17,6 @@ require_once __DIR__ . '/FightPic.php';
 class Index
 {
 
-    private $allow_UserName = [
-        '@@fc7d9e5af8e805f0360ce17be4a72561e0798beffb98319941320fd7cf59d54f',
-        '@0bbf790ad65a91b80b98ee77d598743eeafdec2ca3b905251d77562d7de16c54',
-        '@51459de9033f82910e8f8bee400288c3c9b539d7fe2c998e3e4bb3febdf3867a',
-        '@5831977440ddf35c4295a8940b37e02cd8b18924cd63c5a53eedb5b2e14bfc96'
-    ];
 
     //斗图功能
     public function fightPic($picSearch)
@@ -29,11 +27,17 @@ class Index
 
     }
 
+    //只能聊天
+    public function smartChat($content, $fromUser)
+    {
+        $chatbot = new ChatBot($content, $fromUser);
+        $response = $chatbot->run();
+        return $response;
+    }
+
     //正常处理消息
     public function handleMsg($msg)
     {
-        var_dump($msg['content']);
-
         $action = explode("：", $msg['content']);
         if (count($action) > 1) {
             //有命令
@@ -41,6 +45,21 @@ class Index
             if ($action[0] == '斗图') {
                 $path = $this->fightPic($action[1]);
                 Image::send($msg['from']['UserName'], $path);
+            }elseif ($action[0]=='天气'){
+                $response = $this->smartChat($msg['content'], $msg['from']['UserName']);
+                foreach ($response as $ans) {
+                    if (isset($ans)) {
+                    Text::send($msg['from']['UserName'], $ans);
+                    }
+                }
+            }
+        } elseif ($msg['fromType'] == 'Friend') {
+            //排除群聊
+            $response = $this->smartChat($msg['content'], $msg['from']['UserName']);
+            foreach ($response as $ans) {
+                if (isset($ans)) {
+                    Text::send($msg['from']['UserName'], $ans);
+                }
             }
         }
     }
@@ -48,6 +67,11 @@ class Index
     //运行项目
     public function run($option)
     {
+//        $message=[
+//            'fromType'=>'Friend',
+//            'content'=>'天气',
+//            'from'=>['UserName'>'@a2ab1a0a35f2f528ba4c941f584a04addf6711e068a1df993acdc8f5a45e7975'],
+//        ];
 
         // init vbot
         $vbot = new Vbot($option);
@@ -60,10 +84,21 @@ class Index
         $messageHandler->setHandler(function (Collection $message) {
             $friends = \vbot('friends');
 
-            if ($message['type']=='request_friend'){
+            if ($message['type'] == 'request_friend') {
                 //同意好友请求
                 $friends->approve($message);
-            }else{
+            } elseif ($message['type'] === 'recall') {
+                Text::send($message['from']['UserName'], $message['content'] . ' : ' . $message['origin']['content']);
+                if ($message['origin']['type'] === 'image') {
+                    Image::send($message['from']['UserName'], $message['origin']);
+                } elseif ($message['origin']['type'] === 'emoticon') {
+                    Emoticon::send($message['from']['UserName'], $message['origin']);
+                } elseif ($message['origin']['type'] === 'video') {
+                    Video::send($message['from']['UserName'], $message['origin']);
+                } elseif ($message['origin']['type'] === 'voice') {
+                    Voice::send($message['from']['UserName'], $message['origin']);
+                }
+            } else {
                 $this->handleMsg($message);
             }
         });
