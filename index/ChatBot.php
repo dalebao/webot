@@ -9,7 +9,7 @@
 class ChatBot
 {
     private $config = [
-        'key' => 'e1961d581e424ef998fcf3c1925ce1ab'
+        'key' => ''
     ];
     private $api = 'http://www.tuling123.com/openapi/api';
 
